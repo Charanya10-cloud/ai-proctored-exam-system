@@ -45,29 +45,33 @@ Ai_exam
  ## Setup ### 
 
 ## Backend Setup
-bash
+```bash
 cd server
 npm install
 npm start
+```
 
 Backend runs on:
-bash
+```bash
 http://localhost:5000
+```
 
 ## Frontend Setup Open another terminal:
-bash
+```bash
 cd client
 npm install
 npm run dev
-
+```
 Frontend runs on:
-bash
+```bash
 http://localhost:5173
+```
 
 ## Environment Variables Create a .env file inside the server folder.
-env
+```env
 MONGO_URI=your_mongodb_connection
 JWT_SECRET=your_secret_key
+```
 
 ## Environment Variables
 
