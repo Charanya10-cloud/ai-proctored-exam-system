@@ -34,7 +34,7 @@ A web-based MCQ examination platform integrated with AI-based proctoring using f
 - coco-ssd
 
   ## Project Structure
-bash
+```bash
 Ai_exam
 │
 ├── client
@@ -42,6 +42,7 @@ Ai_exam
 ├── server
 │
 └── README.md
+```
  ## Setup ### 
 
 ## Backend Setup
