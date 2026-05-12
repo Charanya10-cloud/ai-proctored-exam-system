@@ -42,9 +42,7 @@ Ai_exam
 ├── server
 │
 └── README.md
---- ## Installation & Setup ### 1. Clone Repository
-bash
-git clone https://github.com/Charanya10-cloud/ai-proctored-exam-system.git
+--- ## Setup ### 
 
 --- ## Backend Setup
 bash
