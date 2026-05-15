@@ -238,7 +238,7 @@ function Proctoring({
 
             if (
               noFaceCount.current >=
-              2
+              3
             ) {
               increaseWarning(
                 'Face Not Visible'
@@ -257,7 +257,7 @@ function Proctoring({
             error
           )
         }
-      }, 3000)
+      }, 1000)
   }
 
   // ================= OBJECT DETECTION =================

@@ -72,22 +72,24 @@ function AdminDashboard() {
     }
 
   return (
-    <div className='min-h-screen bg-gray-100 p-10'>
+    <div className='min-h-screen bg-gradient-to-br from-[#14001f] via-[#1f0033] to-[#0d001a] text-white p-10'>
+
       {/* HEADER */}
       <div className='flex justify-between items-center mb-10'>
+
         <div>
-          <h1 className='text-4xl font-bold'>
+          <h1 className='text-5xl font-bold bg-gradient-to-r from-purple-400 to-fuchsia-500 bg-clip-text text-transparent'>
             Admin Dashboard
           </h1>
 
-          <p className='text-gray-600 mt-2'>
+          <p className='text-purple-200 mt-3 text-lg'>
             AI Examination Control Panel
           </p>
         </div>
 
         <button
           onClick={logout}
-          className='bg-red-500 text-white px-5 py-2 rounded-xl hover:bg-red-600'
+          className='bg-fuchsia-700 hover:bg-fuchsia-800 text-white px-6 py-3 rounded-2xl transition duration-300 shadow-lg'
         >
           Logout
         </button>
@@ -95,40 +97,42 @@ function AdminDashboard() {
 
       {/* STATS */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-10'>
-        <div className='bg-white p-6 rounded-2xl shadow-lg'>
-          <h2 className='text-xl font-bold'>
+
+        <div className='bg-[#1b0b2b]/90 border border-purple-700 p-6 rounded-3xl shadow-2xl'>
+          <h2 className='text-xl font-semibold text-purple-200'>
             Total Questions
           </h2>
 
-          <p className='text-3xl mt-3 text-blue-600 font-bold'>
+          <p className='text-4xl mt-4 text-purple-400 font-bold'>
             Active
           </p>
         </div>
 
-        <div className='bg-white p-6 rounded-2xl shadow-lg'>
-          <h2 className='text-xl font-bold'>
+        <div className='bg-[#1b0b2b]/90 border border-green-700 p-6 rounded-3xl shadow-2xl'>
+          <h2 className='text-xl font-semibold text-green-200'>
             AI Monitoring
           </h2>
 
-          <p className='text-3xl mt-3 text-green-600 font-bold'>
+          <p className='text-4xl mt-4 text-green-400 font-bold'>
             Enabled
           </p>
         </div>
 
-        <div className='bg-white p-6 rounded-2xl shadow-lg'>
-          <h2 className='text-xl font-bold'>
+        <div className='bg-[#1b0b2b]/90 border border-fuchsia-700 p-6 rounded-3xl shadow-2xl'>
+          <h2 className='text-xl font-semibold text-fuchsia-200'>
             Security Status
           </h2>
 
-          <p className='text-3xl mt-3 text-red-500 font-bold'>
+          <p className='text-4xl mt-4 text-fuchsia-400 font-bold'>
             Protected
           </p>
         </div>
       </div>
 
       {/* ADD QUESTION */}
-      <div className='bg-white p-10 rounded-2xl shadow-lg'>
-        <h2 className='text-3xl font-bold mb-8'>
+      <div className='bg-[#1b0b2b]/90 border border-purple-700 p-10 rounded-3xl shadow-2xl'>
+
+        <h2 className='text-4xl font-bold mb-8 text-purple-300'>
           Add New Question
         </h2>
 
@@ -141,7 +145,7 @@ function AdminDashboard() {
               e.target.value
             )
           }
-          className='border p-3 w-full rounded-xl mb-5'
+          className='bg-[#2a1240] border border-purple-600 text-white p-4 w-full rounded-2xl mb-5 outline-none focus:ring-2 focus:ring-fuchsia-500'
         />
 
         {options.map(
@@ -162,7 +166,7 @@ function AdminDashboard() {
                   e.target.value
                 )
               }
-              className='border p-3 w-full rounded-xl mb-4'
+              className='bg-[#2a1240] border border-purple-600 text-white p-4 w-full rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-fuchsia-500'
             />
           )
         )}
@@ -176,12 +180,12 @@ function AdminDashboard() {
               e.target.value
             )
           }
-          className='border p-3 w-full rounded-xl mb-5'
+          className='bg-[#2a1240] border border-purple-600 text-white p-4 w-full rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-fuchsia-500'
         />
 
         <button
           onClick={addQuestion}
-          className='bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800'
+          className='bg-gradient-to-r from-purple-700 to-fuchsia-700 hover:from-purple-800 hover:to-fuchsia-800 text-white px-8 py-4 rounded-2xl transition duration-300 shadow-lg font-semibold'
         >
           Add Question
         </button>

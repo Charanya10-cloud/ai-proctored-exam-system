@@ -57,10 +57,11 @@ function StudentLogin() {
     }
 
   return (
-    <div className='h-screen flex justify-center items-center bg-gray-100'>
-      <div className='bg-white p-10 rounded-2xl shadow-xl w-[400px]'>
+    <div className='min-h-screen flex justify-center items-center bg-gradient-to-br from-[#12061f] via-[#1f1147] to-[#090114] px-4'>
 
-        <h1 className='text-3xl font-bold mb-8 text-center'>
+      <div className='bg-white/10 backdrop-blur-xl border border-purple-500/20 p-10 rounded-3xl shadow-2xl w-[400px]'>
+
+        <h1 className='text-4xl font-bold mb-8 text-center bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent'>
           Student Login
         </h1>
 
@@ -73,7 +74,7 @@ function StudentLogin() {
               e.target.value
             )
           }
-          className='border p-3 w-full rounded-xl mb-4'
+          className='bg-[#1d1236] border border-purple-500/30 text-white placeholder:text-gray-400 p-4 w-full rounded-2xl mb-4 outline-none focus:border-pink-400 transition-all duration-300'
         />
 
         <input
@@ -85,12 +86,12 @@ function StudentLogin() {
               e.target.value
             )
           }
-          className='border p-3 w-full rounded-xl mb-6'
+          className='bg-[#1d1236] border border-purple-500/30 text-white placeholder:text-gray-400 p-4 w-full rounded-2xl mb-6 outline-none focus:border-pink-400 transition-all duration-300'
         />
 
         <button
           onClick={handleLogin}
-          className='bg-black text-white w-full py-3 rounded-xl'
+          className='bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white w-full py-4 rounded-2xl text-lg font-semibold hover:scale-105 transition-all duration-300 shadow-xl shadow-purple-900/40'
         >
           Login
         </button>
