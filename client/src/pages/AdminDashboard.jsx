@@ -44,7 +44,7 @@ function AdminDashboard() {
     async () => {
       try {
         await axios.post(
-          'http://localhost:5000/api/questions',
+          'https://ai-proctored-exam-system-backend.onrender.com/api/questions',
           {
             question,
             options,

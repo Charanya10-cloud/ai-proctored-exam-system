@@ -54,7 +54,7 @@ npm start
 
 Backend runs on:
 ```bash
-http://localhost:5000
+https://ai-proctored-exam-system-backend.onrender.com
 ```
 
 ## Frontend Setup Open another terminal:
