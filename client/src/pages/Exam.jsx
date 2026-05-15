@@ -42,7 +42,7 @@ function Exam() {
       try {
         const response =
           await axios.get(
-            'http://localhost:5000/api/questions'
+            'https://ai-proctored-exam-system-backend.onrender.com/api/questions'
           )
 
         setQuestions(
