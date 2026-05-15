@@ -1,49 +1,94 @@
-import { useEffect, useRef, useState } from 'react'
-import * as cocossd from '@tensorflow-models/coco-ssd'
-import * as faceapi from 'face-api.js'
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
-function Proctoring({ onAutoSubmit, examEnded }) {
+import * as tf from '@tensorflow/tfjs'
+import '@tensorflow/tfjs-backend-webgl'
+
+import * as cocossd from '@tensorflow-models/coco-ssd'
+
+import * as faceDetection from
+  '@tensorflow-models/face-detection'
+
+function Proctoring({
+  onAutoSubmit,
+  examEnded,
+}) {
   const videoRef = useRef(null)
+
   const streamRef = useRef(null)
 
-  const faceIntervalRef = useRef(null)
-  const objectIntervalRef = useRef(null)
+  const faceIntervalRef =
+    useRef(null)
 
-  const objectModel = useRef(null)
+  const objectIntervalRef =
+    useRef(null)
 
-  const [warning, setWarning] = useState('')
-  const [warningCount, setWarningCount] = useState(0)
-  const [objectWarning, setObjectWarning] = useState('')
+  const objectModelRef =
+    useRef(null)
 
-  const noFaceCount = useRef(0)
-  const multipleFaceCount = useRef(0)
+  const detectorRef =
+    useRef(null)
 
-  const submittedRef = useRef(false)
+  const submittedRef =
+    useRef(false)
 
-  // ================= CLEANUP =================
+  const noFaceCount =
+    useRef(0)
+
+  const [warning,
+    setWarning] =
+    useState('')
+
+  const [warningCount,
+    setWarningCount] =
+    useState(0)
+
+  const [objectWarning,
+    setObjectWarning] =
+    useState('')
+
+  // ================= STOP =================
+
   const stopAll = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop())
+      streamRef.current
+        .getTracks()
+        .forEach(track =>
+          track.stop()
+        )
+
       streamRef.current = null
     }
 
     if (faceIntervalRef.current) {
-      clearInterval(faceIntervalRef.current)
-      faceIntervalRef.current = null
+      clearInterval(
+        faceIntervalRef.current
+      )
     }
 
-    if (objectIntervalRef.current) {
-      clearInterval(objectIntervalRef.current)
-      objectIntervalRef.current = null
+    if (
+      objectIntervalRef.current
+    ) {
+      clearInterval(
+        objectIntervalRef.current
+      )
     }
   }
 
   // ================= INIT =================
+
   useEffect(() => {
     initialize()
 
-    return () => stopAll()
+    return () => {
+      stopAll()
+    }
   }, [])
+
+  // ================= EXAM END =================
 
   useEffect(() => {
     if (examEnded) {
@@ -51,138 +96,269 @@ function Proctoring({ onAutoSubmit, examEnded }) {
     }
   }, [examEnded])
 
+  // ================= INITIALIZE =================
+
   const initialize = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      })
+      // CAMERA
 
-      streamRef.current = stream
+      const stream =
+        await navigator.mediaDevices.getUserMedia(
+          {
+            video: true,
+          }
+        )
+
+      streamRef.current =
+        stream
+
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject =
+          stream
       }
 
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/models')
-      objectModel.current = await cocossd.load()
+      await new Promise(
+        resolve => {
+          videoRef.current.onloadedmetadata =
+            () => {
+              resolve()
+            }
+        }
+      )
 
-      setTimeout(() => {
-        startDetection()
-      }, 3000)
-    } catch (err) {
-      console.log(err)
+      await videoRef.current.play()
+
+      // TENSORFLOW
+
+      await tf.setBackend(
+        'webgl'
+      )
+
+      await tf.ready()
+
+      console.log(
+        'TensorFlow Ready'
+      )
+
+      // FACE DETECTOR
+
+      detectorRef.current =
+        await faceDetection.createDetector(
+          faceDetection
+            .SupportedModels
+            .MediaPipeFaceDetector,
+          {
+            runtime: 'tfjs',
+          }
+        )
+
+      console.log(
+        'Face Detector Loaded'
+      )
+
+      // OBJECT DETECTOR
+
+      objectModelRef.current =
+        await cocossd.load()
+
+      console.log(
+        'COCO SSD Loaded'
+      )
+
+      // START
+
+      startDetection()
+    } catch (error) {
+      console.log(
+        'Initialization Error:',
+        error
+      )
     }
   }
 
-  // ================= WARNING =================
-  const increaseWarning = (msg) => {
-    setWarning(msg)
+  // ================= WARNINGS =================
 
-    setWarningCount(prev => {
-      const updated = prev + 1
+  const increaseWarning =
+    message => {
+      setWarning(message)
 
-      if (updated >= 3 && !submittedRef.current) {
-        submittedRef.current = true
-        stopAll()
-        onAutoSubmit()
-      }
+      setWarningCount(prev => {
+        const updated =
+          prev + 1
 
-      return updated
-    })
-  }
+        if (
+          updated >= 3 &&
+          !submittedRef.current
+        ) {
+          submittedRef.current =
+            true
 
-  // ================= FACE =================
+          alert(
+            'Exam Auto Submitted'
+          )
+
+          stopAll()
+
+          if (onAutoSubmit) {
+            onAutoSubmit()
+          }
+        }
+
+        return updated
+      })
+    }
+
+  // ================= FACE DETECTION =================
+
   const detectFace = () => {
-    faceIntervalRef.current = setInterval(async () => {
-      if (!videoRef.current || examEnded) return
+    faceIntervalRef.current =
+      setInterval(async () => {
+        try {
+          if (
+            !videoRef.current ||
+            !detectorRef.current ||
+            examEnded
+          )
+            return
 
-      const detections = await faceapi.detectAllFaces(
-        videoRef.current,
-        new faceapi.TinyFaceDetectorOptions({
-          inputSize: 512,
-          scoreThreshold: 0.3,
-        })
-      )
+          const faces =
+            await detectorRef.current.estimateFaces(
+              videoRef.current
+            )
 
-      if (detections.length === 0) {
-        noFaceCount.current++
+          console.log(
+            'Faces:',
+            faces
+          )
 
-        if (noFaceCount.current >= 3) {
-          increaseWarning('Face Not Visible')
-          noFaceCount.current = 0
+          if (
+            faces.length === 0
+          ) {
+            noFaceCount.current += 1
+
+            if (
+              noFaceCount.current >=
+              2
+            ) {
+              increaseWarning(
+                'Face Not Visible'
+              )
+
+              noFaceCount.current = 0
+            }
+          } else {
+            noFaceCount.current = 0
+
+            setWarning('')
+          }
+        } catch (error) {
+          console.log(
+            'Face Detection Error:',
+            error
+          )
         }
-
-        multipleFaceCount.current = 0
-      } else if (detections.length > 1) {
-        multipleFaceCount.current++
-
-        if (multipleFaceCount.current >= 3) {
-          increaseWarning('Multiple Faces Detected')
-          multipleFaceCount.current = 0
-        }
-
-        noFaceCount.current = 0
-      } else {
-        noFaceCount.current = 0
-        multipleFaceCount.current = 0
-        setWarning('')
-      }
-    }, 10000)
+      }, 3000)
   }
 
-  // ================= OBJECT =================
-  const detectObjects = () => {
-    objectIntervalRef.current = setInterval(async () => {
-      if (!videoRef.current || !objectModel.current || examEnded) return
+  // ================= OBJECT DETECTION =================
 
-      const predictions = await objectModel.current.detect(videoRef.current)
+  const detectObjects =
+    () => {
+      objectIntervalRef.current =
+        setInterval(async () => {
+          try {
+            if (
+              !videoRef.current ||
+              !objectModelRef.current ||
+              examEnded
+            )
+              return
 
-      const phoneDetected = predictions.find(
-        p => p.class === 'cell phone'
-      )
+            const predictions =
+              await objectModelRef.current.detect(
+                videoRef.current
+              )
 
-      if (phoneDetected && !submittedRef.current) {
-        submittedRef.current = true
+            console.log(
+              predictions
+            )
 
-        alert('Mobile Phone Detected → Exam Terminated')
+            const phoneDetected =
+              predictions.find(
+                prediction =>
+                  prediction.class ===
+                  'cell phone'
+              )
 
-        stopAll()
-        onAutoSubmit()
-      }
-    }, 5000)
-  }
+            if (
+              phoneDetected &&
+              !submittedRef.current
+            ) {
+              submittedRef.current =
+                true
+
+              setObjectWarning(
+                'Mobile Phone Detected'
+              )
+
+              alert(
+                'Mobile Phone Detected → Exam Terminated'
+              )
+
+              stopAll()
+
+              if (onAutoSubmit) {
+                onAutoSubmit()
+              }
+            } else {
+              setObjectWarning('')
+            }
+          } catch (error) {
+            console.log(
+              'Object Detection Error:',
+              error
+            )
+          }
+        }, 5000)
+    }
 
   // ================= START =================
-  const startDetection = () => {
-    detectFace()
-    detectObjects()
-  }
+
+  const startDetection =
+    () => {
+      detectFace()
+
+      detectObjects()
+    }
 
   // ================= UI =================
+
   return (
-    <div className="mb-5">
+    <div className='mb-5'>
       <video
         ref={videoRef}
         autoPlay
         muted
         playsInline
-        width="350"
-        height="250"
-        className="rounded-xl border"
+        width='350'
+        height='250'
+        className='rounded-xl border'
       />
 
-      <div className="mt-3 text-red-500 font-bold">
-        Warnings: {warningCount}/3
+      <div className='mt-3 text-red-500 font-bold'>
+        Warnings:
+        {warningCount}/3
       </div>
 
-      {objectWarning && (
-        <div className="bg-yellow-500 text-white p-3 mt-3 rounded-lg">
-          {objectWarning}
+      {warning && (
+        <div className='bg-red-500 text-white p-3 mt-3 rounded-lg'>
+          {warning}
         </div>
       )}
 
-      {warning && (
-        <div className="bg-red-500 text-white p-3 mt-3 rounded-lg">
-          {warning}
+      {objectWarning && (
+        <div className='bg-yellow-500 text-white p-3 mt-3 rounded-lg'>
+          {objectWarning}
         </div>
       )}
     </div>

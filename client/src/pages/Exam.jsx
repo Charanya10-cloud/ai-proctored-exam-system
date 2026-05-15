@@ -28,11 +28,11 @@ function Exam() {
     setTimer] =
     useState(60)
 
-  const [proctoringStarted,
-    setProctoringStarted] =
+  const [examStarted,
+    setExamStarted] =
     useState(false)
 
-  // FETCH QUESTIONS
+  // ================= FETCH QUESTIONS =================
   useEffect(() => {
     fetchQuestions()
   }, [])
@@ -59,11 +59,29 @@ function Exam() {
       }
     }
 
-  // TIMER
+  // ================= START EXAM =================
+  const startExam =
+    async () => {
+      try {
+        if (
+          document.documentElement
+            .requestFullscreen
+        ) {
+          await document.documentElement.requestFullscreen()
+        }
+
+        setExamStarted(true)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+  // ================= TIMER =================
   useEffect(() => {
     if (
       timer > 0 &&
-      score === null
+      score === null &&
+      examStarted
     ) {
       const interval =
         setInterval(() => {
@@ -79,19 +97,23 @@ function Exam() {
     if (timer === 0) {
       submitExam()
     }
-  }, [timer, score])
+  }, [
+    timer,
+    score,
+    examStarted,
+  ])
 
-  // TAB SWITCH
+  // ================= TAB SWITCH DETECTION =================
   useEffect(() => {
     const handleVisibility =
       () => {
         if (
           document.hidden &&
           score === null &&
-          proctoringStarted
+          examStarted
         ) {
           alert(
-            'Tab switching detected. Exam auto submitted.'
+            'Tab Switching Detected. Exam Auto Submitted.'
           )
 
           submitExam()
@@ -111,20 +133,20 @@ function Exam() {
     }
   }, [
     score,
-    proctoringStarted,
+    examStarted,
   ])
 
-  // FULLSCREEN EXIT
+  // ================= FULLSCREEN EXIT DETECTION =================
   useEffect(() => {
-    const handleFullscreen =
+    const handleFullscreenChange =
       () => {
         if (
           !document.fullscreenElement &&
           score === null &&
-          proctoringStarted
+          examStarted
         ) {
           alert(
-            'Fullscreen exited. Exam auto submitted.'
+            'Fullscreen Exited. Exam Auto Submitted.'
           )
 
           submitExam()
@@ -133,20 +155,21 @@ function Exam() {
 
     document.addEventListener(
       'fullscreenchange',
-      handleFullscreen
+      handleFullscreenChange
     )
 
     return () => {
       document.removeEventListener(
         'fullscreenchange',
-        handleFullscreen
+        handleFullscreenChange
       )
     }
   }, [
     score,
-    proctoringStarted,
+    examStarted,
   ])
 
+  // ================= HANDLE ANSWER =================
   const handleAnswer =
     option => {
       const updatedAnswers =
@@ -161,6 +184,7 @@ function Exam() {
       )
     }
 
+  // ================= NEXT QUESTION =================
   const nextQuestion =
     () => {
       if (
@@ -173,6 +197,7 @@ function Exam() {
       }
     }
 
+  // ================= PREVIOUS QUESTION =================
   const previousQuestion =
     () => {
       if (
@@ -184,80 +209,82 @@ function Exam() {
       }
     }
 
- const submitExam =
-  async () => {
-    if (
-      score !== null ||
-      questions.length === 0
-    )
-      return
+  // ================= SUBMIT EXAM =================
+  const submitExam =
+    async () => {
+      if (
+        score !== null ||
+        questions.length === 0
+      )
+        return
 
-    let totalScore = 0
+      let totalScore = 0
 
-    answers.forEach(
-      (
-        answer,
-        index
-      ) => {
-        if (
-          answer ===
-          questions[index]
-            ?.answer
-        ) {
-          totalScore++
+      answers.forEach(
+        (
+          answer,
+          index
+        ) => {
+          if (
+            answer ===
+            questions[index]
+              ?.answer
+          ) {
+            totalScore++
+          }
         }
+      )
+
+      try {
+        await axios.post(
+          'http://localhost:5000/api/results',
+          {
+            studentName:
+              localStorage.getItem(
+                'name'
+              ),
+
+            email:
+              localStorage.getItem(
+                'email'
+              ),
+
+            score: totalScore,
+
+            totalQuestions:
+              questions.length,
+
+            warnings: 0,
+          }
+        )
+
+        console.log(
+          'Result Saved'
+        )
+      } catch (error) {
+        console.log(error)
       }
-    )
 
-    try {
-      await axios.post(
-        'http://localhost:5000/api/results',
-        {
-          studentName:
-            localStorage.getItem(
-              'name'
-            ),
-
-          email:
-            localStorage.getItem(
-              'email'
-            ),
-
-          score: totalScore,
-
-          totalQuestions:
-            questions.length,
-
-          warnings: 0,
-        }
-      )
-
-      console.log(
-        'Result Saved'
-      )
-    } catch (error) {
-      console.log(error)
+      setScore(totalScore)
     }
 
-    setScore(totalScore)
-  }
-
-  // LOADING
+  // ================= LOADING =================
   if (
     questions.length === 0
   ) {
     return (
-      <h1 className='text-4xl p-10'>
+      <h1 className='text-4xl p-10 text-white bg-black min-h-screen'>
         Loading Questions...
       </h1>
     )
   }
 
-  // RESULT PAGE
+  // ================= RESULT PAGE =================
   if (score !== null) {
     return (
-      <div className='p-10'>
-        <div className='bg-white p-10 rounded-3xl shadow-lg'>
+      <div className='p-10 min-h-screen bg-gradient-to-br from-black via-purple-950 to-black text-white flex items-center justify-center'>
+
+        <div className='bg-purple-900/30 backdrop-blur-lg border border-purple-700 p-10 rounded-3xl shadow-2xl text-center w-full max-w-2xl'>
 
           <h1 className='text-5xl font-bold mb-5'>
             Exam Submitted
@@ -268,7 +295,7 @@ function Exam() {
             {questions.length}
           </h2>
 
-          <p className='text-red-500 text-xl font-semibold'>
+          <p className='text-purple-300 text-xl font-semibold'>
             AI Monitoring Completed
           </p>
 
@@ -277,112 +304,121 @@ function Exam() {
     )
   }
 
+  // ================= MAIN UI =================
   return (
-    <div className='p-10 bg-gray-100 min-h-screen'>
+    <div className='p-10 min-h-screen bg-gradient-to-br from-black via-purple-950 to-black text-white'>
 
-      {/* PROCTORING */}
-      <Proctoring
-        onAutoSubmit={
-          submitExam
-        }
-        onReady={() =>
-          setProctoringStarted(
-            true
-          )
-        }
-        examEnded={
-          score !== null
-        }
-      />
+      {!examStarted && (
+        <button
+          onClick={startExam}
+          className='bg-purple-700 hover:bg-purple-600 text-white px-8 py-4 rounded-2xl mb-6 text-xl'
+        >
+          Start Exam
+        </button>
+      )}
 
-      {/* HEADER */}
-      <div className='flex justify-between items-center mb-10'>
-
-        <h1 className='text-5xl font-bold'>
-          MCQ Examination
-        </h1>
-
-        <div className='text-3xl font-bold text-red-500'>
-          {timer}s
-        </div>
-
-      </div>
-
-      {/* QUESTION CARD */}
-      <div className='bg-white p-10 rounded-3xl shadow-lg'>
-
-        <h2 className='text-3xl mb-10'>
-          {
-            questions[
-              currentQuestion
-            ]?.question
-          }
-        </h2>
-
-        <div className='space-y-5'>
-
-          {questions[
-            currentQuestion
-          ]?.options?.map(
-            (
-              option,
-              index
-            ) => (
-              <button
-                key={index}
-                onClick={() =>
-                  handleAnswer(
-                    option
-                  )
-                }
-                className={`border p-5 w-full text-left rounded-2xl text-xl ${
-                  answers[
-                    currentQuestion
-                  ] === option
-                    ? 'bg-black text-white'
-                    : 'bg-white'
-                }`}
-              >
-                {option}
-              </button>
-            )
-          )}
-
-        </div>
-
-        {/* BUTTONS */}
-        <div className='flex gap-5 mt-10'>
-
-          <button
-            onClick={
-              previousQuestion
-            }
-            className='bg-gray-500 text-white px-8 py-4 rounded-2xl'
-          >
-            Previous
-          </button>
-
-          <button
-            onClick={
-              nextQuestion
-            }
-            className='bg-blue-500 text-white px-8 py-4 rounded-2xl'
-          >
-            Next
-          </button>
-
-          <button
-            onClick={
+      {examStarted && (
+        <>
+          {/* PROCTORING */}
+          <Proctoring
+            onAutoSubmit={
               submitExam
             }
-            className='bg-green-500 text-white px-8 py-4 rounded-2xl'
-          >
-            Submit
-          </button>
+            examEnded={
+              score !== null
+            }
+          />
 
-        </div>
+          {/* HEADER */}
+          <div className='flex justify-between items-center mb-10'>
 
-      </div>
+            <h1 className='text-5xl font-bold'>
+              MCQ Examination
+            </h1>
+
+            <div className='text-3xl font-bold text-red-400 bg-purple-900 px-6 py-3 rounded-2xl shadow-lg'>
+              {timer}s
+            </div>
+
+          </div>
+
+          {/* QUESTION CARD */}
+          <div className='bg-purple-900/20 backdrop-blur-lg border border-purple-700 p-10 rounded-3xl shadow-2xl'>
+
+            <h2 className='text-3xl mb-10'>
+              {
+                questions[
+                  currentQuestion
+                ]?.question
+              }
+            </h2>
+
+            <div className='space-y-5'>
+
+              {questions[
+                currentQuestion
+              ]?.options?.map(
+                (
+                  option,
+                  index
+                ) => (
+                  <button
+                    key={index}
+                    onClick={() =>
+                      handleAnswer(
+                        option
+                      )
+                    }
+                    className={`border border-purple-600 p-5 w-full text-left rounded-2xl text-xl transition-all duration-300 ${
+                      answers[
+                        currentQuestion
+                      ] === option
+                        ? 'bg-purple-700 text-white'
+                        : 'bg-black/40 hover:bg-purple-800/40'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                )
+              )}
+
+            </div>
+
+            {/* BUTTONS */}
+            <div className='flex gap-5 mt-10'>
+
+              <button
+                onClick={
+                  previousQuestion
+                }
+                className='bg-gray-700 hover:bg-gray-600 text-white px-8 py-4 rounded-2xl transition-all'
+              >
+                Previous
+              </button>
+
+              <button
+                onClick={
+                  nextQuestion
+                }
+                className='bg-purple-700 hover:bg-purple-600 text-white px-8 py-4 rounded-2xl transition-all'
+              >
+                Next
+              </button>
+
+              <button
+                onClick={
+                  submitExam
+                }
+                className='bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-2xl transition-all'
+              >
+                Submit
+              </button>
+
+            </div>
+
+          </div>
+        </>
+      )}
     </div>
   )
 }

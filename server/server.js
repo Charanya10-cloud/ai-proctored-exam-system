@@ -1,3 +1,4 @@
+const resultRoutes = require('./routes/resultRoutes')
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
@@ -9,6 +10,7 @@ app.use(cors())
 app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/questions', questionRoutes)
+app.use('/api/results', resultRoutes)
 mongoose
   .connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 30000,
