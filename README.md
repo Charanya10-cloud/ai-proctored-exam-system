@@ -52,7 +52,7 @@ A full-stack web-based MCQ examination platform integrated with AI-powered proct
 
 ## Frontend
 ```bash
-https://your-vercel-url.vercel.app
+https://ai-proctored-exam-system.vercel.app/
 ```
 
 ## Backend
