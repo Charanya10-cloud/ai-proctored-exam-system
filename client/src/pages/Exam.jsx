@@ -32,6 +32,11 @@ function Exam() {
     setExamStarted] =
     useState(false)
 
+  const [
+    allowFullscreenDetection,
+    setAllowFullscreenDetection,
+  ] = useState(false)
+
   // ================= FETCH QUESTIONS =================
   useEffect(() => {
     fetchQuestions()
@@ -63,6 +68,22 @@ function Exam() {
   const startExam =
     async () => {
       try {
+        // CAMERA PERMISSION FIRST
+        const stream =
+          await navigator.mediaDevices.getUserMedia(
+            {
+              video: true,
+            }
+          )
+
+        // STOP TEMP STREAM
+        stream
+          .getTracks()
+          .forEach(track =>
+            track.stop()
+          )
+
+        // ENTER FULLSCREEN
         if (
           document.documentElement
             .requestFullscreen
@@ -71,8 +92,19 @@ function Exam() {
         }
 
         setExamStarted(true)
+
+        // ENABLE FULLSCREEN DETECTION AFTER FEW SECONDS
+        setTimeout(() => {
+          setAllowFullscreenDetection(
+            true
+          )
+        }, 3000)
       } catch (error) {
         console.log(error)
+
+        alert(
+          'Camera Permission Required'
+        )
       }
     }
 
@@ -143,7 +175,8 @@ function Exam() {
         if (
           !document.fullscreenElement &&
           score === null &&
-          examStarted
+          examStarted &&
+          allowFullscreenDetection
         ) {
           alert(
             'Fullscreen Exited. Exam Auto Submitted.'
@@ -167,6 +200,7 @@ function Exam() {
   }, [
     score,
     examStarted,
+    allowFullscreenDetection,
   ])
 
   // ================= HANDLE ANSWER =================
