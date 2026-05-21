@@ -191,43 +191,56 @@ function Proctoring({
   }
 
   // ================= WARNINGS =================
+const cooldownRef =
+  useRef(false)
 
-  const increaseWarning =
-    message => {
+const increaseWarning =
+  message => {
 
-      setWarning(message)
+    // PREVENT WARNING SPAM
 
-      setWarningCount(prev => {
+    if (cooldownRef.current)
+      return
 
-        const updated =
-          prev + 1
+    cooldownRef.current = true
 
-        if (
-          updated >= 3 &&
-          !submittedRef.current
-        ) {
+    setTimeout(() => {
+      cooldownRef.current = false
+    }, 3000)
 
-          submittedRef.current =
-            true
+    setWarning(message)
 
-          setStatus(
-            'Exam Auto Submitted'
-          )
+    setWarningCount(prev => {
 
-          alert(
-            'Exam Auto Submitted'
-          )
+      const updated =
+        prev + 1
 
-          stopAll()
+      if (
+        updated >= 3 &&
+        !submittedRef.current
+      ) {
 
-          if (onAutoSubmit) {
-            onAutoSubmit()
-          }
+        submittedRef.current =
+          true
+
+        setStatus(
+          'Exam Auto Submitted'
+        )
+
+        alert(
+          'Exam Auto Submitted'
+        )
+
+        stopAll()
+
+        if (onAutoSubmit) {
+          onAutoSubmit()
         }
+      }
 
-        return updated
-      })
-    }
+      return updated
+    })
+  }
 
   // ================= FACE DETECTION =================
 
