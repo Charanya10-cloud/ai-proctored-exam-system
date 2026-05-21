@@ -37,6 +37,9 @@ function Proctoring({
   const noFaceCount =
     useRef(0)
 
+  const multipleFaceCount =
+    useRef(0)
+
   const [warning,
     setWarning] =
     useState('')
@@ -105,12 +108,17 @@ function Proctoring({
 
   const initialize = async () => {
     try {
+
       // CAMERA
 
       const stream =
         await navigator.mediaDevices.getUserMedia(
           {
-            video: true,
+            video: {
+              width: 320,
+              height: 240,
+              facingMode: 'user',
+            },
           }
         )
 
@@ -170,9 +178,10 @@ function Proctoring({
         'COCO SSD Loaded'
       )
 
-      // START
+      // START DETECTION
 
       startDetection()
+
     } catch (error) {
       console.log(
         'Initialization Error:',
@@ -185,9 +194,11 @@ function Proctoring({
 
   const increaseWarning =
     message => {
+
       setWarning(message)
 
       setWarningCount(prev => {
+
         const updated =
           prev + 1
 
@@ -195,6 +206,7 @@ function Proctoring({
           updated >= 3 &&
           !submittedRef.current
         ) {
+
           submittedRef.current =
             true
 
@@ -220,9 +232,12 @@ function Proctoring({
   // ================= FACE DETECTION =================
 
   const detectFace = () => {
+
     faceIntervalRef.current =
       setInterval(async () => {
+
         try {
+
           if (
             !videoRef.current ||
             !detectorRef.current ||
@@ -237,25 +252,31 @@ function Proctoring({
 
           console.log(
             'Faces:',
-            faces
+            faces.length
           )
 
-          // MULTIPLE FACE
+          // MULTIPLE FACES
 
           if (
             faces.length >= 2
           ) {
+
+            multipleFaceCount.current += 1
+
             setStatus(
               'Multiple Faces Detected'
             )
 
-            setWarning(
-              'Multiple Faces Detected'
-            )
+            if (
+              multipleFaceCount.current >= 2
+            ) {
 
-            increaseWarning(
-              'Multiple Faces Detected'
-            )
+              increaseWarning(
+                'Multiple Faces Detected'
+              )
+
+              multipleFaceCount.current = 0
+            }
 
             return
           }
@@ -265,6 +286,7 @@ function Proctoring({
           if (
             faces.length === 0
           ) {
+
             noFaceCount.current += 1
 
             setStatus(
@@ -272,9 +294,9 @@ function Proctoring({
             )
 
             if (
-              noFaceCount.current >=
-              2
+              noFaceCount.current >= 2
             ) {
+
               increaseWarning(
                 'Face Not Visible'
               )
@@ -286,7 +308,10 @@ function Proctoring({
           // FACE PRESENT
 
           else {
+
             noFaceCount.current = 0
+
+            multipleFaceCount.current = 0
 
             setWarning('')
 
@@ -294,12 +319,15 @@ function Proctoring({
               'Face Detected'
             )
           }
+
         } catch (error) {
+
           console.log(
             'Face Detection Error:',
             error
           )
         }
+
       }, 300)
   }
 
@@ -307,9 +335,12 @@ function Proctoring({
 
   const detectObjects =
     () => {
+
       objectIntervalRef.current =
         setInterval(async () => {
+
           try {
+
             if (
               !videoRef.current ||
               !objectModelRef.current ||
@@ -323,6 +354,7 @@ function Proctoring({
               )
 
             console.log(
+              'Objects:',
               predictions
             )
 
@@ -330,13 +362,16 @@ function Proctoring({
               predictions.find(
                 prediction =>
                   prediction.class ===
-                  'cell phone'
+                    'cell phone' &&
+                  prediction.score >
+                    0.60
               )
 
             if (
               phoneDetected &&
               !submittedRef.current
             ) {
+
               submittedRef.current =
                 true
 
@@ -348,31 +383,41 @@ function Proctoring({
                 'Mobile Phone Detected'
               )
 
-              alert(
-                'Mobile Phone Detected → Exam Terminated'
-              )
+              setTimeout(() => {
 
-              stopAll()
+                alert(
+                  'Mobile Phone Detected → Exam Terminated'
+                )
 
-              if (onAutoSubmit) {
-                onAutoSubmit()
-              }
+                stopAll()
+
+                if (onAutoSubmit) {
+                  onAutoSubmit()
+                }
+
+              }, 500)
+
             } else {
+
               setObjectWarning('')
             }
+
           } catch (error) {
+
             console.log(
               'Object Detection Error:',
               error
             )
           }
-        }, 3000)
+
+        }, 1000)
     }
 
   // ================= START =================
 
   const startDetection =
     () => {
+
       detectFace()
 
       detectObjects()
@@ -387,15 +432,18 @@ function Proctoring({
 
       <div className='w-full flex justify-between items-center mb-5'>
 
-        {/* LIVE STATUS */}
+        {/* STATUS */}
 
         <div
           className={`px-6 py-3 rounded-2xl text-white font-bold text-lg shadow-xl transition-all duration-300 ${
-            status === 'Face Detected'
+            status ===
+            'Face Detected'
               ? 'bg-green-500'
-              : status === 'Monitoring Active'
+              : status ===
+                'Monitoring Active'
               ? 'bg-blue-500'
-              : status === 'Multiple Faces Detected'
+              : status ===
+                'Multiple Faces Detected'
               ? 'bg-orange-500 animate-pulse'
               : 'bg-red-500 animate-pulse'
           }`}
@@ -406,7 +454,8 @@ function Proctoring({
         {/* WARNING COUNT */}
 
         <div className='text-red-400 font-bold text-xl'>
-          Warnings: {warningCount}/3
+          Warnings:
+          {warningCount}/3
         </div>
 
       </div>
