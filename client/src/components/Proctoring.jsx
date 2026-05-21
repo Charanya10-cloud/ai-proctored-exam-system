@@ -9,8 +9,7 @@ import '@tensorflow/tfjs-backend-webgl'
 
 import * as cocossd from '@tensorflow-models/coco-ssd'
 
-import * as faceDetection from
-  '@tensorflow-models/face-detection'
+import * as faceDetection from '@tensorflow-models/face-detection'
 
 function Proctoring({
   onAutoSubmit,
@@ -49,6 +48,12 @@ function Proctoring({
   const [objectWarning,
     setObjectWarning] =
     useState('')
+
+  const [status,
+    setStatus] =
+    useState(
+      'Monitoring Active'
+    )
 
   // ================= STOP =================
 
@@ -144,11 +149,11 @@ function Proctoring({
 
       detectorRef.current =
         await faceDetection.createDetector(
-          faceDetection
-            .SupportedModels
-            .MediaPipeFaceDetector,
+          faceDetection.SupportedModels.MediaPipeFaceDetector,
           {
             runtime: 'tfjs',
+            modelType: 'short',
+            maxFaces: 5,
           }
         )
 
@@ -193,6 +198,10 @@ function Proctoring({
           submittedRef.current =
             true
 
+          setStatus(
+            'Exam Auto Submitted'
+          )
+
           alert(
             'Exam Auto Submitted'
           )
@@ -231,14 +240,40 @@ function Proctoring({
             faces
           )
 
+          // MULTIPLE FACE
+
+          if (
+            faces.length >= 2
+          ) {
+            setStatus(
+              'Multiple Faces Detected'
+            )
+
+            setWarning(
+              'Multiple Faces Detected'
+            )
+
+            increaseWarning(
+              'Multiple Faces Detected'
+            )
+
+            return
+          }
+
+          // NO FACE
+
           if (
             faces.length === 0
           ) {
             noFaceCount.current += 1
 
+            setStatus(
+              'No Face Detected'
+            )
+
             if (
               noFaceCount.current >=
-              3
+              2
             ) {
               increaseWarning(
                 'Face Not Visible'
@@ -246,10 +281,18 @@ function Proctoring({
 
               noFaceCount.current = 0
             }
-          } else {
+          }
+
+          // FACE PRESENT
+
+          else {
             noFaceCount.current = 0
 
             setWarning('')
+
+            setStatus(
+              'Face Detected'
+            )
           }
         } catch (error) {
           console.log(
@@ -257,7 +300,7 @@ function Proctoring({
             error
           )
         }
-      }, 1000)
+      }, 300)
   }
 
   // ================= OBJECT DETECTION =================
@@ -301,6 +344,10 @@ function Proctoring({
                 'Mobile Phone Detected'
               )
 
+              setStatus(
+                'Mobile Phone Detected'
+              )
+
               alert(
                 'Mobile Phone Detected → Exam Terminated'
               )
@@ -319,7 +366,7 @@ function Proctoring({
               error
             )
           }
-        }, 5000)
+        }, 3000)
     }
 
   // ================= START =================
@@ -334,7 +381,38 @@ function Proctoring({
   // ================= UI =================
 
   return (
-    <div className='mb-5'>
+    <div className='mb-5 w-full flex flex-col items-start'>
+
+      {/* TOP BAR */}
+
+      <div className='w-full flex justify-between items-center mb-5'>
+
+        {/* LIVE STATUS */}
+
+        <div
+          className={`px-6 py-3 rounded-2xl text-white font-bold text-lg shadow-xl transition-all duration-300 ${
+            status === 'Face Detected'
+              ? 'bg-green-500'
+              : status === 'Monitoring Active'
+              ? 'bg-blue-500'
+              : status === 'Multiple Faces Detected'
+              ? 'bg-orange-500 animate-pulse'
+              : 'bg-red-500 animate-pulse'
+          }`}
+        >
+          {status}
+        </div>
+
+        {/* WARNING COUNT */}
+
+        <div className='text-red-400 font-bold text-xl'>
+          Warnings: {warningCount}/3
+        </div>
+
+      </div>
+
+      {/* VIDEO */}
+
       <video
         ref={videoRef}
         autoPlay
@@ -342,25 +420,25 @@ function Proctoring({
         playsInline
         width='350'
         height='250'
-        className='rounded-xl border'
+        className='rounded-3xl border-4 border-purple-500 shadow-2xl object-cover'
       />
 
-      <div className='mt-3 text-red-500 font-bold'>
-        Warnings:
-        {warningCount}/3
-      </div>
+      {/* FACE WARNING */}
 
       {warning && (
-        <div className='bg-red-500 text-white p-3 mt-3 rounded-lg'>
+        <div className='bg-red-500 text-white px-6 py-4 mt-5 rounded-2xl font-bold shadow-xl animate-pulse'>
           {warning}
         </div>
       )}
 
+      {/* OBJECT WARNING */}
+
       {objectWarning && (
-        <div className='bg-yellow-500 text-white p-3 mt-3 rounded-lg'>
+        <div className='bg-yellow-500 text-white px-6 py-4 mt-5 rounded-2xl font-bold shadow-xl animate-pulse'>
           {objectWarning}
         </div>
       )}
+
     </div>
   )
 }
